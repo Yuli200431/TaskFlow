@@ -13,9 +13,7 @@ class TaskFlowApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'TaskFlow',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.indigo,
-        ),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
         useMaterial3: true,
       ),
       home: const WelcomeScreen(),
@@ -23,90 +21,101 @@ class TaskFlowApp extends StatelessWidget {
   }
 }
 
-class WelcomeScreen extends StatelessWidget {
+class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
 
   @override
+  State<WelcomeScreen> createState() => _WelcomeScreenState();
+}
+
+class _WelcomeScreenState extends State<WelcomeScreen> {
+  final String studentName = 'Yuleisi Moreira';
+  static const dailyGoal = 5;
+  int pendingTasks = 3;
+  int completedTasks = 0;
+
+  void _completeTask() {
+    if (pendingTasks == 0) {
+      return;
+    }
+
+    setState(() {
+      pendingTasks--;
+      if (completedTasks < dailyGoal) {
+        completedTasks++;
+      }
+    });
+  }
+
+  void _addTask() {
+    setState(() {
+      pendingTasks++;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // Variables de la pantalla de bienvenida
-    const studentName = 'Yuleis Mariley';
-    const motivationalMessage =
-        '¡Cada tarea completada te acerca a tu meta!';
-    const pendingTasks = 3;
-    const courseName = 'Desarrollo de aplicaciones móviles';
+    final statusMessage = pendingTasks == 0
+        ? '¡Excelente! No tienes tareas pendientes.'
+        : 'Aún tienes tareas por organizar.';
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('TaskFlow'),
-        centerTitle: true,
-        backgroundColor: Colors.indigo,
-        foregroundColor: Colors.white,
-      ),
-
+      appBar: AppBar(title: const Text('TaskFlow'), centerTitle: true),
       body: Padding(
         padding: const EdgeInsets.all(24),
-
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-
           children: [
-            // Icono representativo de TaskFlow
-            const Icon(
-              Icons.task_alt,
-              size: 64,
-              color: Colors.indigo,
-            ),
-
-            const SizedBox(height: 24),
-
-            // Saludo personalizado
             Text(
               '¡Hola, $studentName!',
               style: Theme.of(context).textTheme.headlineMedium,
             ),
-
             const SizedBox(height: 12),
-
-            // Mensaje motivacional
-            Text(
-              motivationalMessage,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Colors.indigo,
-                    fontWeight: FontWeight.w500,
-                  ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // Nombre de la asignatura
-            Text(
-              'Bienvenido/a a $courseName.',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-
-            const SizedBox(height: 32),
-
-            // Tarjeta de tareas pendientes
+            Text(statusMessage),
+            Text('Completadas hoy: $completedTasks de $dailyGoal'),
+            const SizedBox(height: 28),
             Card(
-              elevation: 3,
               child: Padding(
                 padding: const EdgeInsets.all(20),
-
                 child: Row(
                   children: [
-                    const Icon(
-                      Icons.pending_actions,
-                      color: Colors.indigo,
-                    ),
-
+                    const Icon(Icons.pending_actions),
                     const SizedBox(width: 12),
-
-                    Text(
-                      'Tareas pendientes: $pendingTasks',
-                    ),
+                    Text('Tareas pendientes: $pendingTasks'),
                   ],
                 ),
               ),
+            ),
+            const SizedBox(height: 16),
+
+            Text(
+              'Objetivo diario: $completedTasks de 5 tareas completadas',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+
+            if (completedTasks >= 5)
+              const Text(
+                '¡Felicitaciones! Alcanzaste tu objetivo diario.',
+                style: TextStyle(
+                  color: Colors.green,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            const SizedBox(height: 24),
+            Wrap(
+              spacing: 12,
+              children: [
+                ElevatedButton.icon(
+                  onPressed: _addTask,
+                  icon: const Icon(Icons.add),
+                  label: const Text('Agregar tarea'),
+                ),
+                OutlinedButton.icon(
+                  onPressed: pendingTasks == 0 ? null : _completeTask,
+                  icon: const Icon(Icons.done),
+                  label: const Text('Completar una tarea'),
+                ),
+              ],
             ),
           ],
         ),
