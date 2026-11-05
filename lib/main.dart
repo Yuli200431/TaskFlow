@@ -16,7 +16,82 @@ class TaskFlowApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
         useMaterial3: true,
       ),
-      home: const WelcomeScreen(),
+      home: const TaskListScreen(),
+    );
+  }
+}
+
+class Task {
+  const Task({
+    required this.id,
+    required this.title,
+    required this.description,
+    required this.priority,
+    required this.isCompleted,
+  });
+
+  final int id;
+  final String title;
+  final String description;
+  final String priority;
+  final bool isCompleted;
+}
+
+const demoTasks = [
+  Task(
+    id: 1,
+    title: 'Revisar requisitos de la Etapa 3',
+    description: 'Analizar las nuevas indicaciones del proyecto ForáneoGo',
+    priority: 'Alta',
+    isCompleted: true,
+  ),
+  Task(
+    id: 2,
+    title: 'Analizar la nueva fuente de verdad',
+    description: 'Definir cómo se administrarán los datos del sistema',
+    priority: 'Alta',
+    isCompleted: true,
+  ),
+  Task(
+    id: 3,
+    title: 'Adaptar los repositorios de datos',
+    description: 'Actualizar el acceso a los datos de la aplicación',
+    priority: 'Alta',
+    isCompleted: false,
+  ),
+  Task(
+    id: 4,
+    title: 'Integrar la aplicación con el servidor',
+    description: 'Conectar ForáneoGo con los servicios remotos',
+    priority: 'Alta',
+    isCompleted: false,
+  ),
+  Task(
+    id: 5,
+    title: 'Realizar pruebas de integración',
+    description: 'Verificar la comunicación y el funcionamiento',
+    priority: 'Media',
+    isCompleted: false,
+  ),
+];
+
+class TaskCard extends StatelessWidget {
+  const TaskCard({super.key, required this.task});
+
+  final Task task;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: ListTile(
+        leading: Icon(
+          task.isCompleted ? Icons.check_circle : Icons.radio_button_unchecked,
+          color: task.isCompleted ? Colors.green : null,
+        ),
+        title: Text(task.title),
+        subtitle: Text('${task.priority} · ${task.description}'),
+        trailing: const Icon(Icons.chevron_right),
+      ),
     );
   }
 }
@@ -119,6 +194,25 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class TaskListScreen extends StatelessWidget {
+  const TaskListScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Mis tareas')),
+      body: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: demoTasks.length,
+        itemBuilder: (context, index) {
+          final task = demoTasks[index];
+          return TaskCard(task: task);
+        },
       ),
     );
   }
