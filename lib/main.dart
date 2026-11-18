@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
+import 'task.dart';
 
 void main() {
   runApp(const TaskFlowApp());
@@ -9,34 +12,19 @@ class TaskFlowApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       title: 'TaskFlow',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
         useMaterial3: true,
       ),
-      home: const TaskListScreen(),
+      routerConfig: appRouter,
     );
   }
 }
 
-class Task {
-  const Task({
-    required this.id,
-    required this.title,
-    required this.description,
-    required this.priority,
-    required this.isCompleted,
-  });
-
-  final int id;
-  final String title;
-  final String description;
-  final String priority;
-  final bool isCompleted;
-}
-
+// Tareas de ejemplo del proyecto ForáneoGo.
 const demoTasks = [
   Task(
     id: 1,
@@ -44,6 +32,7 @@ const demoTasks = [
     description: 'Analizar las nuevas indicaciones del proyecto ForáneoGo',
     priority: 'Alta',
     isCompleted: true,
+    userId: 1,
   ),
   Task(
     id: 2,
@@ -51,6 +40,7 @@ const demoTasks = [
     description: 'Definir cómo se administrarán los datos del sistema',
     priority: 'Alta',
     isCompleted: true,
+    userId: 1,
   ),
   Task(
     id: 3,
@@ -58,6 +48,7 @@ const demoTasks = [
     description: 'Actualizar el acceso a los datos de la aplicación',
     priority: 'Alta',
     isCompleted: false,
+    userId: 1,
   ),
   Task(
     id: 4,
@@ -65,6 +56,7 @@ const demoTasks = [
     description: 'Conectar ForáneoGo con los servicios remotos',
     priority: 'Alta',
     isCompleted: false,
+    userId: 1,
   ),
   Task(
     id: 5,
@@ -72,18 +64,46 @@ const demoTasks = [
     description: 'Verificar la comunicación y el funcionamiento',
     priority: 'Media',
     isCompleted: false,
+    userId: 1,
   ),
 ];
 
+// Busca una tarea por su identificador.
+Task? findTask(int? id) {
+  for (final task in demoTasks) {
+    if (task.id == id) {
+      return task;
+    }
+  }
+  return null;
+}
+
+// Configuración de navegación.
+final appRouter = GoRouter(
+  routes: [
+    GoRoute(path: '/', builder: (context, state) => const TaskListScreen()),
+    GoRoute(
+      path: '/task/:id',
+      builder: (context, state) {
+        final id = int.tryParse(state.pathParameters['id'] ?? '');
+        return TaskDetailScreen(task: findTask(id));
+      },
+    ),
+  ],
+);
+
+// Tarjeta de cada tarea.
 class TaskCard extends StatelessWidget {
-  const TaskCard({super.key, required this.task});
+  const TaskCard({super.key, required this.task, this.onTap});
 
   final Task task;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     return Card(
       child: ListTile(
+        onTap: onTap,
         leading: Icon(
           task.isCompleted ? Icons.check_circle : Icons.radio_button_unchecked,
           color: task.isCompleted ? Colors.green : null,
@@ -96,6 +116,7 @@ class TaskCard extends StatelessWidget {
   }
 }
 
+// Pantalla de bienvenida de las sesiones anteriores.
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
 
@@ -105,7 +126,9 @@ class WelcomeScreen extends StatefulWidget {
 
 class _WelcomeScreenState extends State<WelcomeScreen> {
   final String studentName = 'Yuleisi Moreira';
+
   static const dailyGoal = 5;
+
   int pendingTasks = 3;
   int completedTasks = 0;
 
@@ -116,6 +139,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
     setState(() {
       pendingTasks--;
+
       if (completedTasks < dailyGoal) {
         completedTasks++;
       }
@@ -162,13 +186,11 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               ),
             ),
             const SizedBox(height: 16),
-
             Text(
               'Objetivo diario: $completedTasks de 5 tareas completadas',
               style: Theme.of(context).textTheme.titleMedium,
             ),
-
-            if (completedTasks >= 5)
+            if (completedTasks >= dailyGoal)
               const Text(
                 '¡Felicitaciones! Alcanzaste tu objetivo diario.',
                 style: TextStyle(
@@ -199,6 +221,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   }
 }
 
+// Pantalla principal: listado de tareas.
 class TaskListScreen extends StatelessWidget {
   const TaskListScreen({super.key});
 
@@ -211,8 +234,96 @@ class TaskListScreen extends StatelessWidget {
         itemCount: demoTasks.length,
         itemBuilder: (context, index) {
           final task = demoTasks[index];
-          return TaskCard(task: task);
+
+          return TaskCard(
+            task: task,
+            onTap: () => context.push('/task/${task.id}'),
+          );
         },
+      ),
+    );
+  }
+}
+
+// Pantalla de detalle de una tarea.
+class TaskDetailScreen extends StatelessWidget {
+  const TaskDetailScreen({super.key, required this.task});
+
+  final Task? task;
+
+  @override
+  Widget build(BuildContext context) {
+    final selected = task;
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Detalle de tarea')),
+      body: Padding(
+        padding: const EdgeInsets.all(24),
+        child: selected == null
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('No se encontró esta tarea.'),
+                  const SizedBox(height: 20),
+                  FilledButton.tonalIcon(
+                    onPressed: () =>
+                        context.canPop() ? context.pop() : context.go('/'),
+                    icon: const Icon(Icons.arrow_back),
+                    label: const Text('Volver al listado'),
+                  ),
+                ],
+              )
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    selected.title,
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(selected.description),
+                  const SizedBox(height: 16),
+                  Chip(label: Text('Prioridad: ${selected.priority}')),
+                  const SizedBox(height: 12),
+                  Text(
+                    selected.isCompleted
+                        ? 'Estado: completada'
+                        : 'Estado: pendiente',
+                  ),
+                  const SizedBox(height: 12),
+                  Text('Usuario: ${selected.userId}'),
+                  const SizedBox(height: 20),
+                  Card(
+                    child: ListTile(
+                      leading: Icon(
+                        selected.isCompleted
+                            ? Icons.check_circle
+                            : Icons.pending_actions,
+                        color: selected.isCompleted
+                            ? Colors.green
+                            : Colors.orange,
+                      ),
+                      title: Text(
+                        selected.isCompleted
+                            ? 'Tarea finalizada'
+                            : 'Tarea por realizar',
+                      ),
+                      subtitle: Text(
+                        selected.isCompleted
+                            ? 'Esta actividad ya fue completada.'
+                            : 'Esta actividad todavía está pendiente.',
+                      ),
+                    ),
+                  ),
+                  const Spacer(),
+                  FilledButton.tonalIcon(
+                    onPressed: () =>
+                        context.canPop() ? context.pop() : context.go('/'),
+                    icon: const Icon(Icons.arrow_back),
+                    label: const Text('Volver al listado'),
+                  ),
+                ],
+              ),
       ),
     );
   }
