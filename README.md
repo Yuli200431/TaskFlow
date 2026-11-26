@@ -91,3 +91,72 @@ JSON en un objeto Task de Dart.
 
 Actualmente se utilizan datos locales de ejemplo.
 La conexión con una API queda prevista para futuras sesiones.
+
+
+## API de tareas
+
+En la Sesión 07 se integró una API REST en TaskFlow utilizando Dio, con el objetivo de obtener tareas desde un servidor y mostrarlas en la aplicación mediante la arquitectura MVVM.
+
+### Endpoint utilizado
+
+- **API:** JSONPlaceholder
+- **URL base:** https://jsonplaceholder.typicode.com
+- **Endpoint:** `/todos`
+- **Método HTTP:** GET
+- **Parámetro:** `userId=2`
+- **URL completa:** https://jsonplaceholder.typicode.com/todos?userId=2
+
+Se seleccionó el usuario 2 para comprobar que TaskFlow puede consultar tareas de diferentes usuarios.
+
+### Campos recibidos
+
+La API proporciona cuatro campos:
+
+- `userId`: identificador del usuario.
+- `id`: identificador de la tarea.
+- `title`: título de la tarea.
+- `completed`: estado de finalización.
+
+### Adaptación al modelo Task
+
+El modelo de TaskFlow conserva seis campos. Como la API no proporciona descripción ni prioridad, se utilizan los siguientes valores predeterminados:
+
+- `description`: Sin descripción (API).
+- `priority`: Sin prioridad (API).
+
+Además, el campo `completed` se convierte en `isCompleted` mediante `Task.fromJson()`.
+
+### Arquitectura utilizada
+
+La aplicación mantiene la arquitectura MVVM y utiliza la siguiente secuencia:
+
+Service → Repository → ViewModel → Interfaz.
+
+`TaskApiService` realiza la solicitud HTTP mediante Dio. `RemoteTaskRepository` obtiene y conserva temporalmente los datos. `TasksViewModel` administra las tareas y notifica a la interfaz mediante Provider.
+
+### Actualización del estado
+
+Cuando se marca una tarea como completada, el cambio se realiza únicamente en memoria. Todavía no se envía una actualización al servidor, por lo que al reiniciar la aplicación se recupera el estado original de la API.
+
+## Sesión 08 — Estados de carga, éxito, vacío y error
+
+En esta sesión se implementó el manejo de los estados de la consulta remota de tareas mediante ChangeNotifier, Provider, context.watch y context.read.
+
+### Estados de la aplicación
+
+| Estado | Comportamiento | Prueba realizada |
+|---|---|---|
+| Carga | Indicador circular y mensaje «Cargando tus tareas...». | Se presionó el icono de actualización. |
+| Éxito | Listado remoto con la cantidad de tareas disponibles. | Se consultó la API con el parámetro userId = 2 y conexión a internet. |
+| Vacío | Icono, mensaje informativo y botón Actualizar. | Se cambió temporalmente el parámetro userId a 9999. |
+| Error | Icono, mensaje de error y botón Reintentar. | Se desactivó la conexión a internet y se actualizó el listado. |
+
+### Trabajo autónomo incremental
+
+Se personalizaron los mensajes, iconos y botones de los diferentes estados de TaskFlow. También se incorporó un contador de tareas en la barra superior.
+
+Se comprobó que el botón Reintentar permite recuperar el listado remoto después de restablecer la conexión a internet, sin necesidad de reiniciar la aplicación.
+
+Se conservó la navegación al detalle, la actualización mediante el gesto de deslizar hacia abajo y la opción de marcar tareas como completadas de manera local.
+
+Finalmente, se restauró el parámetro userId = 2 para mantener la consulta remota de tareas.
